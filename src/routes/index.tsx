@@ -1,24 +1,42 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
+import { GameShell } from "@/components/game/GameShell";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Verkehrsplaner – 2D Verkehrssimulation im Browser" },
+      {
+        name: "description",
+        content:
+          "Baue Straßen, Kreuzungen und Ampeln und löse Staus: eine detaillierte 2D-Verkehrssimulation mit eigenständigen Fahrzeugen, Routenwahl und Tagesverkehr.",
+      },
+      { property: "og:title", content: "Verkehrsplaner – 2D Verkehrssimulation" },
+      {
+        property: "og:description",
+        content:
+          "Straßenbau, Ampelphasen, Kreisverkehre und emergente Staus in einer Top-Down-Verkehrssimulation.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main>
+      <h1 className="sr-only">Verkehrsplaner – 2D Verkehrssimulation</h1>
+      <ClientOnly
+        fallback={
+          <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">
+            Karte wird geladen …
+          </div>
+        }
+      >
+        <GameShell />
+      </ClientOnly>
+    </main>
   );
 }
