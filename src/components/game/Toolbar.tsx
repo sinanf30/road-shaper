@@ -70,7 +70,7 @@ export function Toolbar({ engine, refresh }: Props) {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-start gap-2 p-3">
+      <div className="flex max-h-44 flex-wrap items-start gap-2 overflow-y-auto p-3">
         {tab === "Straßen" && (
           <>
             {(Object.keys(ROAD_SPECS) as RoadType[]).map((rt) => {
