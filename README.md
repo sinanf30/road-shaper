@@ -140,3 +140,13 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Hold'em Coach (`/poker`)
+
+No-Limit Texas Hold'em gegen KI-Gegner direkt im Browser, mit anschließender Analyse der eigenen Spielweise.
+
+1. Spiel: 1 bis 5 KI-Gegner mit unterschiedlichen Spielstilen (Tight-Aggressiv, Loose-Aggressiv, Calling Station, Rock, Maniac), Side Pots, All-ins, Trainingsmodus mit Equity und Pot Odds.
+2. Analyse: VPIP, PFR, 3-Bet, Limp, Aggression, C-Bet, Fold vs. Bet, WTSD, W$SD, Ergebnis nach Position, Verlaufskurve und die teuersten Einzelfehler mit geschätztem EV-Verlust.
+3. Export: komplette Hand History als Markdown, um sie mit Claude ausführlich zu besprechen.
+
+Code: `src/poker` (Engine, KI, Equity, Analyse) und `src/components/poker` (Oberfläche).
