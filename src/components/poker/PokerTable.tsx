@@ -15,6 +15,8 @@ import { decideAI, AI_STYLES } from "@/poker/ai";
 import { estimateEquity } from "@/poker/equity";
 import { handName, preflopPercentile, handClass } from "@/poker/cards";
 import { judgeDecision, type Mistake } from "@/poker/analysis";
+import { adviseHero, startHandWords, STREET_DE } from "@/poker/coach";
+import { GlossaryOverlay } from "./Glossary";
 import type { GameState, HandRecord } from "@/poker/types";
 
 interface Props {
@@ -38,6 +40,7 @@ export function PokerTable({
   const [autoNext, setAutoNext] = useState(false);
   const [speed, setSpeed] = useState(700);
   const [feedback, setFeedback] = useState<Mistake[] | null>(null);
+  const [showGlossary, setShowGlossary] = useState(false);
   const savedHand = useRef(0);
   const s = state;
   const hero = s.players[HERO];
@@ -86,6 +89,7 @@ export function PokerTable({
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0b1410] text-zinc-100">
+      {showGlossary && <GlossaryOverlay onClose={() => setShowGlossary(false)} />}
       {/* Kopfzeile */}
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-white/10 px-4 py-2 text-sm">
         <span className="font-display text-xl font-semibold tracking-wide text-amber-300">
@@ -125,6 +129,12 @@ export function PokerTable({
             <option value={700}>KI normal</option>
             <option value={250}>KI schnell</option>
           </select>
+          <button
+            onClick={() => setShowGlossary(true)}
+            className="rounded-md border border-white/25 px-3 py-1 hover:bg-white/10"
+          >
+            Begriffe erklärt
+          </button>
           <button
             onClick={onEndSession}
             className="rounded-md bg-amber-400 px-3 py-1 font-semibold text-zinc-900 hover:bg-amber-300"
@@ -262,26 +272,9 @@ export function PokerTable({
         <aside className="flex w-full flex-col gap-3 lg:w-80">
           {training && (
             <div className="rounded-lg border border-white/10 bg-black/40 p-3 text-sm">
-              <div className="mb-1 font-semibold text-amber-200">Trainingshilfe</div>
+              <div className="mb-2 font-semibold text-amber-200">Trainer</div>
               {hero.hole.length === 2 ? (
-                <ul className="space-y-0.5 text-zinc-300">
-                  <li>
-                    Starthand: {handClass(hero.hole)} (Top{" "}
-                    {Math.round(preflopPercentile(hero.hole) * 100)} %)
-                  </li>
-                  {s.board.length > 0 && <li>Aktuell: {handName([...hero.hole, ...s.board])}</li>}
-                  {equity !== null && (
-                    <li>
-                      Equity (geschätzt): <b>{Math.round(equity * 100)} %</b>
-                    </li>
-                  )}
-                  {legal && legal.toCall > 0 && (
-                    <li>
-                      Pot Odds: brauche{" "}
-                      <b>{Math.round((legal.callAmount / (pot + legal.callAmount)) * 100)} %</b>
-                    </li>
-                  )}
-                </ul>
+                <TrainerPanel state={s} equity={equity} />
               ) : (
                 <div className="text-zinc-400">Noch keine Karten.</div>
               )}
@@ -297,7 +290,7 @@ export function PokerTable({
                   {feedback.map((m, i) => (
                     <li key={i}>
                       <div className="font-medium text-red-300">
-                        {m.street}: {m.title}
+                        {STREET_DE[m.street]}: {m.title}
                       </div>
                       <div className="text-xs text-zinc-300">{m.detail}</div>
                     </li>
@@ -309,6 +302,45 @@ export function PokerTable({
           <HandLog state={s} />
         </aside>
       </div>
+    </div>
+  );
+}
+
+function TrainerPanel({ state: s, equity }: { state: GameState; equity: number | null }) {
+  const hero = s.players[HERO];
+  const words = startHandWords(preflopPercentile(hero.hole));
+  const advice = adviseHero(s, equity);
+  const toneCls = (t: "good" | "ok" | "bad") =>
+    t === "good" ? "text-emerald-300" : t === "ok" ? "text-sky-300" : "text-red-300";
+  return (
+    <div className="space-y-2 text-zinc-300">
+      <div>
+        <div className="text-xs text-zinc-400">Deine Starthand ({handClass(hero.hole)})</div>
+        <div className={toneCls(words.tone)}>{words.label}</div>
+      </div>
+      {s.board.length > 0 && (
+        <div>
+          <div className="text-xs text-zinc-400">Was du gerade hast</div>
+          <div>{handName([...hero.hole, ...s.board])}</div>
+        </div>
+      )}
+      {advice ? (
+        <div className="rounded-md border border-white/10 bg-black/30 p-2">
+          <div className="text-xs text-zinc-400">Empfehlung</div>
+          <div className={cn("font-semibold", toneCls(advice.tone))}>{advice.action}</div>
+          <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
+            {advice.reasons.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        !s.handOver && (
+          <div className="text-xs text-zinc-400">
+            Sobald du dran bist, bekommst du hier eine Empfehlung.
+          </div>
+        )
+      )}
     </div>
   );
 }

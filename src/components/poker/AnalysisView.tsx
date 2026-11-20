@@ -13,6 +13,9 @@ import { PlayingCard } from "./PlayingCard";
 import { cn } from "@/lib/utils";
 import { analyze, exportForCoach, type Mistake, type StatLine } from "@/poker/analysis";
 import type { HandRecord } from "@/poker/types";
+import { STAT_PLAIN } from "@/poker/glossary";
+import { STREET_DE } from "@/poker/coach";
+import { GlossaryList } from "./Glossary";
 
 const pct = (x: number) => `${Math.round(x * 100)} %`;
 
@@ -119,15 +122,21 @@ export function AnalysisView({
             )}
 
             {/* Kennzahlen */}
+            <p className="text-sm text-zinc-300">
+              Gewinne und Verluste werden in Big Blinds (BB) gemessen, also in Vielfachen des
+              Pflichteinsatzes von 20 Chips. Grüne Zahlen liegen im guten Bereich, gelbe weichen ab.
+              Unten auf der Seite sind alle Begriffe erklärt.
+            </p>
+
             <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               <Kpi label="Hände" value={String(a.hands)} />
               <Kpi
-                label="Ergebnis"
+                label="Ergebnis (in Big Blinds)"
                 value={`${a.netBB >= 0 ? "+" : ""}${a.netBB.toFixed(1)} BB`}
                 tone={a.netBB >= 0 ? "good" : "bad"}
               />
               <Kpi
-                label="BB / 100 Hände"
+                label="Ergebnis pro 100 Hände"
                 value={a.bbPer100.toFixed(1)}
                 tone={a.bbPer100 >= 0 ? "good" : "bad"}
               />
@@ -139,7 +148,7 @@ export function AnalysisView({
                 }
               />
               <Kpi
-                label="Geschätzter EV-Verlust"
+                label="Durch Fehler verschenkt (geschätzt)"
                 value={`${a.totalEvLossBB.toFixed(1)} BB`}
                 tone="bad"
               />
@@ -220,16 +229,14 @@ export function AnalysisView({
 
             {/* Statistiken */}
             <section className="rounded-lg border border-white/10 bg-black/30 p-4">
-              <h2 className="mb-3 text-lg font-semibold">
-                Statistiken im Vergleich zu solidem 6-Max-Spiel
-              </h2>
+              <h2 className="mb-3 text-lg font-semibold">Deine Spielweise in Zahlen</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {a.stats.map((s) => {
                   const st = statStatus(s);
                   return (
                     <div key={s.key} className="rounded-md border border-white/10 bg-black/30 p-3">
                       <div className="flex items-baseline justify-between">
-                        <span className="font-medium">{s.label}</span>
+                        <span className="font-medium">{STAT_PLAIN[s.key]?.name ?? s.label}</span>
                         <span
                           className={cn(
                             "font-mono text-lg",
@@ -242,7 +249,7 @@ export function AnalysisView({
                         </span>
                       </div>
                       <div className="text-xs text-zinc-400">
-                        Ziel{" "}
+                        Guter Bereich{" "}
                         {s.unit === "%"
                           ? `${pct(s.target[0])} bis ${pct(s.target[1])}`
                           : `${s.target[0]} bis ${s.target[1]}`}{" "}
@@ -250,7 +257,9 @@ export function AnalysisView({
                         {st === "low" && " · zu niedrig"}
                         {st === "high" && " · zu hoch"}
                       </div>
-                      <div className="mt-1 text-xs text-zinc-300">{s.explain}</div>
+                      <div className="mt-1 text-xs text-zinc-300">
+                        {STAT_PLAIN[s.key]?.question ?? s.explain}
+                      </div>
                     </div>
                   );
                 })}
@@ -260,7 +269,9 @@ export function AnalysisView({
             {/* Fehler */}
             <section className="rounded-lg border border-white/10 bg-black/30 p-4">
               <div className="mb-3 flex flex-wrap items-baseline gap-2">
-                <h2 className="text-lg font-semibold">Teuerste Einzelentscheidungen</h2>
+                <h2 className="text-lg font-semibold">
+                  Deine teuersten Fehler (anklicken für Erklärung)
+                </h2>
                 <span className="text-xs text-zinc-400">
                   Preflop {a.streetErrors.preflop} · Flop {a.streetErrors.flop} · Turn{" "}
                   {a.streetErrors.turn} · River {a.streetErrors.river}
@@ -321,6 +332,11 @@ export function AnalysisView({
                 </p>
               </section>
             )}
+
+            <section className="rounded-lg border border-white/10 bg-black/30 p-4">
+              <h2 className="mb-3 text-lg font-semibold">Begriffe einfach erklärt</h2>
+              <GlossaryList />
+            </section>
 
             {/* Export */}
             <section className="rounded-lg border border-amber-400/30 bg-amber-400/5 p-4">
@@ -411,7 +427,7 @@ function MistakeRow({ m }: { m: Mistake }) {
         <div className="min-w-40 flex-1">
           <div className="text-sm font-medium">{m.title}</div>
           <div className="text-xs text-zinc-400">
-            Hand {m.handNo} · {d.position} · {m.street}
+            Hand {m.handNo} · Position {d.position} · {STREET_DE[m.street]}
           </div>
         </div>
         <span className="font-mono text-sm text-red-300">≈ −{m.evLossBB.toFixed(1)} BB</span>
@@ -420,9 +436,9 @@ function MistakeRow({ m }: { m: Mistake }) {
         <div className="border-t border-white/10 p-3 text-sm text-zinc-300">
           <p>{m.detail}</p>
           <p className="mt-2 text-xs text-zinc-400">
-            Pot {d.pot} · zu callen {d.toCall} · Stack {d.stack} · Gegner {d.opponents} · Equity{" "}
-            {Math.round(d.equity * 100)} %
-            {d.toCall > 0 && ` · benötigt ${Math.round(d.potOdds * 100)} %`}
+            Pot {d.pot} · zum Mitgehen {d.toCall} · deine Chips {d.stack} · Gegner {d.opponents} ·
+            Gewinnchance {Math.round(d.equity * 100)} %
+            {d.toCall > 0 && ` · nötig ${Math.round(d.potOdds * 100)} %`}
           </p>
         </div>
       )}

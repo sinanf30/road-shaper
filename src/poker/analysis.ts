@@ -124,7 +124,7 @@ export function judgeDecision(d: HeroDecision, tableSize: number): Mistake[] {
       if (d.kind === "call" && d.position !== "BB")
         add(
           "Limpen",
-          "Gelimpt statt geraist",
+          "Nur mitgegangen statt erhöht (Limp)",
           `${describe(d)}: Du hast nur den Big Blind bezahlt. Limpen gibt die Initiative ab und lässt die Blinds billig mitspielen. Entweder mit 2,5 bis 3 BB eröffnen oder folden.`,
           p > open * 1.4 ? 1.2 : 0.6,
         );
@@ -195,8 +195,8 @@ export function judgeDecision(d: HeroDecision, tableSize: number): Mistake[] {
     if (e < d.potOdds - tol)
       add(
         "Calls ohne Odds",
-        "Call ohne ausreichende Equity",
-        `${describe(d)}: Du musstest ${d.toCall} in einen Pot von ${d.pot} zahlen, brauchst also ${pct(d.potOdds)} Equity. Deine geschätzte Equity lag bei ${pct(e)}. Langfristig kostet dieser Call etwa ${(-ev / d.bb).toFixed(1)} BB.`,
+        "Mitgegangen, obwohl es sich nicht lohnt",
+        `${describe(d)}: Du musstest ${d.toCall} in einen Pot von ${d.pot} zahlen, brauchst also mindestens ${pct(d.potOdds)} Gewinnchance (Pot Odds). Deine geschätzte Gewinnchance lag bei ${pct(e)}. Auf Dauer kostet so ein Call etwa ${(-ev / d.bb).toFixed(1)} BB.`,
         -ev / d.bb,
       );
   }
@@ -205,8 +205,8 @@ export function judgeDecision(d: HeroDecision, tableSize: number): Mistake[] {
     if (e > d.potOdds + 0.08 && ev > 0)
       add(
         "Zu viele Folds",
-        "Fold trotz guter Pot Odds",
-        `${describe(d)}: Benötigt waren nur ${pct(d.potOdds)} Equity, du hattest etwa ${pct(e)}. Ein Call hätte im Schnitt ${(ev / d.bb).toFixed(1)} BB eingebracht.`,
+        "Ausgestiegen, obwohl Mitgehen sich gelohnt hätte",
+        `${describe(d)}: Nötig waren nur ${pct(d.potOdds)} Gewinnchance, du hattest etwa ${pct(e)}. Mitgehen hätte im Schnitt ${(ev / d.bb).toFixed(1)} BB eingebracht.`,
         ev / d.bb,
       );
   }
@@ -216,8 +216,10 @@ export function judgeDecision(d: HeroDecision, tableSize: number): Mistake[] {
       const loss = (d.pot * 0.5 * (e - 0.5)) / d.bb;
       add(
         "Value verschenkt",
-        d.street === "river" ? "Value-Bet am River verpasst" : "Starke Hand nur gecheckt",
-        `${describe(d)}: Mit etwa ${pct(e)} Equity solltest du meist selbst setzen (50 bis 75 % des Pots), damit schwächere Hände bezahlen.${d.street !== "river" ? " Außerdem gibst du Draws eine Gratiskarte." : ""}`,
+        d.street === "river"
+          ? "Am River nicht gesetzt, obwohl du vorne lagst"
+          : "Starke Hand nur gecheckt",
+        `${describe(d)}: Mit etwa ${pct(e)} Gewinnchance solltest du meist selbst setzen (50 bis 75 % des Pots), damit schwächere Hände bezahlen.${d.street !== "river" ? " Außerdem gibst du Draws eine Gratiskarte." : ""}`,
         loss,
         loss >= 2 ? "mittel" : "klein",
       );
@@ -229,14 +231,14 @@ export function judgeDecision(d: HeroDecision, tableSize: number): Mistake[] {
       add(
         "Bluffs",
         "Bluff gegen mehrere Gegner",
-        `${describe(d)}: Mit nur ${pct(e)} Equity gegen ${d.opponents} Gegner. Bluffs funktionieren am besten heads-up, gegen mehrere Gegner callt fast immer jemand.`,
+        `${describe(d)}: Mit nur ${pct(e)} Gewinnchance gegen ${d.opponents} Gegner. Bluffs funktionieren am besten heads-up, gegen mehrere Gegner callt fast immer jemand.`,
         (betAmount * 0.4) / d.bb,
       );
     if (d.kind === "bet" && e > 0.65 && betAmount < d.pot * 0.3 && betAmount < d.stack)
       add(
         "Bet Sizing",
         "Value-Bet zu klein",
-        `${describe(d)}: Du hast ${betAmount} in einen Pot von ${d.pot} gesetzt (${pct(betAmount / Math.max(1, d.pot))}). Mit ${pct(e)} Equity darfst du deutlich größer setzen (50 bis 75 % des Pots).`,
+        `${describe(d)}: Du hast ${betAmount} in einen Pot von ${d.pot} gesetzt (${pct(betAmount / Math.max(1, d.pot))}). Mit ${pct(e)} Gewinnchance darfst du deutlich größer setzen (50 bis 75 % des Pots).`,
         (d.pot * 0.25 * (e - 0.4)) / d.bb,
         "klein",
       );
@@ -244,7 +246,7 @@ export function judgeDecision(d: HeroDecision, tableSize: number): Mistake[] {
       add(
         "Bluffs",
         "Riskanter River-Bluff-Raise",
-        `${describe(d)}: Ein Bluff-Raise am River muss sehr oft funktionieren. Mit ${pct(e)} Equity ist ein Fold meist günstiger.`,
+        `${describe(d)}: Ein Bluff-Raise am River muss sehr oft funktionieren. Mit ${pct(e)} Gewinnchance ist ein Fold meist günstiger.`,
         (betAmount * 0.3) / d.bb,
         "klein",
       );
@@ -510,7 +512,7 @@ export function analyze(hands: HandRecord[]): Analysis {
     if (f.value! > 0.65)
       leaks.push({
         title: "Du foldest zu oft gegen Bets",
-        text: `Gegen einen Einsatz foldest du ${pct(f.value!)} der Zeit. Gegner können dich leicht rausbluffen. Prüfe die Pot Odds: Bei einer halben Pot-Bet brauchst du nur 25 % Equity.`,
+        text: `Gegen einen Einsatz foldest du ${pct(f.value!)} der Zeit. Gegner können dich leicht rausbluffen. Prüfe die Pot Odds: Bei einer halben Pot-Bet brauchst du nur 25 % Gewinnchance.`,
         weight: 2.5,
       });
     else if (f.value! < 0.25)
@@ -544,7 +546,7 @@ export function analyze(hands: HandRecord[]): Analysis {
     "Calls ohne Odds":
       "Rechne vor jedem Call: Betrag zum Callen / (Pot + Betrag). Liegt deine Gewinnchance darunter, ist Fold richtig. Faustregel: Flush-Draw am Flop ca. 35 %, am Turn ca. 19 %.",
     "Zu viele Folds":
-      "Du gibst Pots auf, in denen du genug Equity hattest. Bei kleinen Einsätzen der Gegner reichen oft schon 20 bis 30 % Gewinnchance für einen profitablen Call.",
+      "Du gibst Pots auf, in denen du genug Gewinnchance hattest. Bei kleinen Einsätzen der Gegner reichen oft schon 20 bis 30 % Gewinnchance für einen profitablen Call.",
     "Value verschenkt":
       "Wenn du vermutlich vorne liegst, setze! Gegner callen mit schwächeren Händen, die beim Check nichts zahlen.",
     "Preflop zu loose":
