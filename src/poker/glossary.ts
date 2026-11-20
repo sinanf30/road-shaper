@@ -77,40 +77,70 @@ export const GLOSSARY: Term[] = [
   },
 ];
 
-/** Kennzahlen in Alltagssprache. */
-export const STAT_PLAIN: Record<string, { name: string; question: string }> = {
+/** Kennzahlen: was sie zeigen und was ein zu hoher oder zu niedriger Wert bedeutet. */
+export const STAT_INFO: Record<
+  string,
+  { full: string; meaning: string; low: string; high: string }
+> = {
   vpip: {
-    name: "Mitgespielte Hände (VPIP)",
-    question: "Wie oft spielst du eine Hand freiwillig mit?",
+    full: "Voluntarily Put money In Pot",
+    meaning:
+      "Zeigt, wie viele Hände du freiwillig mitspielst (vor dem Flop mitgehen oder erhöhen). Der Pflichteinsatz im Big Blind zählt nicht.",
+    low: "Du spielst sehr wenige Hände. Gegner merken das und weichen dir aus, wenn du endlich setzt.",
+    high: "Du spielst zu viele Hände. Mit schwachen Karten landest du oft in Pots, die du verlierst.",
   },
-  pfr: { name: "Erhöht vor dem Flop (PFR)", question: "Wie oft erhöhst du vor dem Flop?" },
+  pfr: {
+    full: "Pre-Flop Raise",
+    meaning:
+      "Zeigt, wie oft du vor dem Flop erhöhst. Sollte nur wenig unter deinem VPIP liegen: Wenn du mitspielst, dann meist mit einer Erhöhung.",
+    low: "Du gehst oft nur mit statt zu erhöhen. Damit gibst du die Kontrolle über die Hand ab.",
+    high: "Du erhöhst sehr oft, auch mit schwachen Händen.",
+  },
   "3bet": {
-    name: "Re-Raise (3-Bet)",
-    question: "Wie oft erhöhst du, wenn jemand vor dir erhöht hat?",
+    full: "Dritter Einsatz (Re-Raise)",
+    meaning:
+      "Zeigt, wie oft du nochmals erhöhst, wenn jemand vor dem Flop schon erhöht hat. Der Big Blind ist Einsatz 1, das Raise Einsatz 2, deine Erhöhung darauf die 3-Bet.",
+    low: "Du gehst gegen Erhöhungen fast nur mit. Mit sehr starken Händen solltest du nochmals erhöhen.",
+    high: "Du erhöhst gegen Raises sehr oft. Das wird teuer, wenn der Gegner wirklich stark ist.",
   },
   limp: {
-    name: "Nur mitgegangen (Limp)",
-    question: "Wie oft zahlst du vor dem Flop nur den Big Blind, statt zu erhöhen?",
+    full: "Limp",
+    meaning:
+      "Zeigt, wie oft du vor dem Flop nur den Big Blind bezahlst, obwohl noch niemand erhöht hat. Sollte nahe 0 % liegen.",
+    low: "",
+    high: "Du limpst oft. Besser: Gute Hände erhöhen, schwache Hände folden.",
   },
   af: {
-    name: "Aggressivität (AF)",
-    question:
-      "Wie oft setzt oder erhöhst du nach dem Flop im Vergleich zum Mitgehen? 2,0 heißt: doppelt so oft setzen wie mitgehen.",
+    full: "Aggression Factor",
+    meaning:
+      "Zeigt nach dem Flop das Verhältnis von Setzen und Erhöhen zu Mitgehen. 2,0 heißt: Du setzt oder erhöhst doppelt so oft, wie du nur mitgehst.",
+    low: "Du gehst meist nur mit. Wer nur mitgeht, kann nur mit der besten Hand gewinnen, nie dadurch, dass der Gegner aufgibt.",
+    high: "Du setzt sehr oft. Achte darauf, dass jede Bet einen Grund hat.",
   },
   cbet: {
-    name: "Weitergesetzt am Flop (C-Bet)",
-    question: "Wie oft setzt du am Flop, nachdem du vor dem Flop erhöht hast?",
+    full: "Continuation Bet",
+    meaning:
+      "Zeigt, wie oft du am Flop weitersetzt, nachdem du vor dem Flop erhöht hast und es zu dir gecheckt wird.",
+    low: "Du gibst nach deiner Erhöhung oft auf. Eine kleine Bet am Flop gewinnt häufig sofort, weil der Gegner meist auch nichts getroffen hat.",
+    high: "Du setzt fast immer weiter. Gegen mehrere Gegner lieber auch mal checken.",
   },
   fvb: {
-    name: "Aufgegeben gegen Einsatz",
-    question: "Wie oft steigst du nach dem Flop aus, wenn ein Gegner setzt?",
+    full: "Fold vs. Bet",
+    meaning: "Zeigt, wie oft du nach dem Flop aussteigst, wenn ein Gegner setzt.",
+    low: "Du gehst fast immer mit und bezahlst so oft bessere Hände.",
+    high: "Du gibst zu schnell auf. Gegner können dich leicht wegbluffen.",
   },
   wtsd: {
-    name: "Bis zum Aufdecken (WTSD)",
-    question: "Wie oft gehst du nach dem Flop bis zum Showdown?",
+    full: "Went To ShowDown",
+    meaning:
+      "Zeigt, wie oft du bis zum Aufdecken der Karten dabei bleibst, wenn du den Flop gesehen hast.",
+    low: "Du steigst oft vor dem Ende aus. Prüfe, ob du gute Hände zu früh weggibst.",
+    high: "Du gehst sehr oft bis zum Ende mit, auch mit mittelmäßigen Händen.",
   },
   wsd: {
-    name: "Am Showdown gewonnen (W$SD)",
-    question: "Wie oft gewinnst du, wenn die Karten aufgedeckt werden?",
+    full: "Won $ at ShowDown",
+    meaning: "Zeigt, wie oft du gewinnst, wenn die Karten aufgedeckt werden.",
+    low: "Am Ende hast du oft die schlechtere Hand. Lass schwache Hände am Turn und River öfter los.",
+    high: "Am Ende hast du meist die beste Hand. Vielleicht kannst du etwas mutiger spielen.",
   },
 };

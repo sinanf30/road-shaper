@@ -13,7 +13,7 @@ import { PlayingCard } from "./PlayingCard";
 import { cn } from "@/lib/utils";
 import { analyze, exportForCoach, type Mistake, type StatLine } from "@/poker/analysis";
 import type { HandRecord } from "@/poker/types";
-import { STAT_PLAIN } from "@/poker/glossary";
+import { STAT_INFO } from "@/poker/glossary";
 import { STREET_DE } from "@/poker/coach";
 import { GlossaryList } from "./Glossary";
 
@@ -136,7 +136,7 @@ export function AnalysisView({
                 tone={a.netBB >= 0 ? "good" : "bad"}
               />
               <Kpi
-                label="Ergebnis pro 100 Hände"
+                label="BB/100 (Ergebnis pro 100 Hände)"
                 value={a.bbPer100.toFixed(1)}
                 tone={a.bbPer100 >= 0 ? "good" : "bad"}
               />
@@ -148,7 +148,7 @@ export function AnalysisView({
                 }
               />
               <Kpi
-                label="Durch Fehler verschenkt (geschätzt)"
+                label="EV-Verlust (durch Fehler verschenkt)"
                 value={`${a.totalEvLossBB.toFixed(1)} BB`}
                 tone="bad"
               />
@@ -229,14 +229,21 @@ export function AnalysisView({
 
             {/* Statistiken */}
             <section className="rounded-lg border border-white/10 bg-black/30 p-4">
-              <h2 className="mb-3 text-lg font-semibold">Deine Spielweise in Zahlen</h2>
+              <h2 className="mb-3 text-lg font-semibold">Deine Kennzahlen und was sie bedeuten</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {a.stats.map((s) => {
                   const st = statStatus(s);
                   return (
                     <div key={s.key} className="rounded-md border border-white/10 bg-black/30 p-3">
                       <div className="flex items-baseline justify-between">
-                        <span className="font-medium">{STAT_PLAIN[s.key]?.name ?? s.label}</span>
+                        <span>
+                          <span className="font-medium">{s.label}</span>
+                          {STAT_INFO[s.key] && STAT_INFO[s.key].full !== s.label && (
+                            <span className="ml-1.5 text-[11px] text-zinc-500">
+                              {STAT_INFO[s.key].full}
+                            </span>
+                          )}
+                        </span>
                         <span
                           className={cn(
                             "font-mono text-lg",
@@ -258,7 +265,13 @@ export function AnalysisView({
                         {st === "high" && " · zu hoch"}
                       </div>
                       <div className="mt-1 text-xs text-zinc-300">
-                        {STAT_PLAIN[s.key]?.question ?? s.explain}
+                        {STAT_INFO[s.key]?.meaning ?? s.explain}
+                        {st === "low" && STAT_INFO[s.key]?.low && (
+                          <div className="mt-1 text-amber-200">{STAT_INFO[s.key].low}</div>
+                        )}
+                        {st === "high" && STAT_INFO[s.key]?.high && (
+                          <div className="mt-1 text-amber-200">{STAT_INFO[s.key].high}</div>
+                        )}
                       </div>
                     </div>
                   );

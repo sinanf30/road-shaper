@@ -310,6 +310,9 @@ function TrainerPanel({ state: s, equity }: { state: GameState; equity: number |
   const hero = s.players[HERO];
   const words = startHandWords(preflopPercentile(hero.hole));
   const advice = adviseHero(s, equity);
+  const heroTurn = !s.handOver && s.toAct === HERO;
+  const legal = heroTurn ? legalActions(s) : null;
+  const pot = potTotal(s);
   const toneCls = (t: "good" | "ok" | "bad") =>
     t === "good" ? "text-emerald-300" : t === "ok" ? "text-sky-300" : "text-red-300";
   return (
@@ -324,6 +327,27 @@ function TrainerPanel({ state: s, equity }: { state: GameState; equity: number |
           <div>{handName([...hero.hole, ...s.board])}</div>
         </div>
       )}
+      <dl className="space-y-1.5 rounded-md border border-white/10 bg-black/20 p-2 text-xs">
+        <Metric
+          name="Starthand-Ranking"
+          value={`Top ${Math.round(preflopPercentile(hero.hole) * 100)} %`}
+          info="So viele von 100 möglichen Starthänden sind gleich gut oder besser. Kleiner ist besser."
+        />
+        {equity !== null && (
+          <Metric
+            name="Equity"
+            value={`${Math.round(equity * 100)} %`}
+            info="Deine Gewinnchance: So oft würdest du diese Hand gewinnen, wenn man sie sehr oft spielt."
+          />
+        )}
+        {legal && legal.toCall > 0 && (
+          <Metric
+            name="Pot Odds"
+            value={`${Math.round((legal.callAmount / (pot + legal.callAmount)) * 100)} %`}
+            info="So hoch muss deine Equity mindestens sein, damit sich Mitgehen lohnt. Equity höher: mitgehen, Equity niedriger: folden."
+          />
+        )}
+      </dl>
       {advice ? (
         <div className="rounded-md border border-white/10 bg-black/30 p-2">
           <div className="text-xs text-zinc-400">Empfehlung</div>
@@ -341,6 +365,18 @@ function TrainerPanel({ state: s, equity }: { state: GameState; equity: number |
           </div>
         )
       )}
+    </div>
+  );
+}
+
+function Metric({ name, value, info }: { name: string; value: string; info: string }) {
+  return (
+    <div>
+      <div className="flex justify-between gap-2">
+        <dt className="font-semibold text-zinc-100">{name}</dt>
+        <dd className="font-mono font-semibold text-amber-200">{value}</dd>
+      </div>
+      <div className="text-zinc-400">{info}</div>
     </div>
   );
 }
